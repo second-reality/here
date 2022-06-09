@@ -36,7 +36,6 @@ fn build_map(w: u32, h: u32, aim: u8) -> Image {
 
 fn main() {
     let h = HelloWorld::new();
-    h.set_map(build_map(4096, 4096, 255));
     let mut rng = rand::thread_rng();
     h.on_build_map(move |width, height| {
         build_map(width as u32, height as u32, rng.gen_range(150..210))
