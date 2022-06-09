@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 rand = "0.8.5"
 slint = "0.2.4"
+native-dialog = "0.6.3"
