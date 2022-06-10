@@ -2,19 +2,11 @@ use rand::Rng;
 use slint::*;
 
 slint::slint! {
-    import { Button } from "std-widgets.slint";
     HelloWorld := Window {
-        property <image> map;
-        img := Image {
-            source: map;
+        Image {
+            source: build_map(parent.width, parent.height);
         }
         callback build_map(length, length) -> image;
-        Button {
-            width: 100px;
-            height: 100px;
-            text: "click here!";
-            clicked => {parent.map = parent.build_map(parent.width, parent.height);}
-        }
     }
 }
 
