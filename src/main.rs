@@ -26,19 +26,11 @@ fn build_map(w: u32, h: u32, aim: u8) -> Image {
     Image::from_rgb8(pixel_buffer)
 }
 
-use native_dialog::*;
-
 fn main() {
     let h = HelloWorld::new();
     let mut rng = rand::thread_rng();
     h.on_build_map(move |width, height| {
         let aim = rng.gen_range(150..210);
-        MessageDialog::new()
-            .set_type(MessageType::Info)
-            .set_title("Show range")
-            .set_text(&format!("Aim is {aim}"))
-            .show_alert()
-            .unwrap();
         build_map(width as u32, height as u32, aim)
     });
     h.run();
