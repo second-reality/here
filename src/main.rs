@@ -2,11 +2,11 @@ use rand::Rng;
 use slint::*;
 
 slint::slint! {
-    HelloWorld := Window {
+    export component MainWindow inherits Window {
         Image {
             source: build_map(parent.width, parent.height);
         }
-        callback build_map(length, length) -> image;
+        pure callback build_map(length, length) -> image;
     }
 }
 
@@ -27,11 +27,11 @@ fn build_map(w: u32, h: u32, aim: u8) -> Image {
 }
 
 fn main() {
-    let h = HelloWorld::new();
+    let w = MainWindow::new().unwrap();
     let mut rng = rand::thread_rng();
-    h.on_build_map(move |width, height| {
+    w.on_build_map(move |width, height| {
         let aim = rng.gen_range(150..210);
         build_map(width as u32, height as u32, aim)
     });
-    h.run();
+    w.run().unwrap();
 }
