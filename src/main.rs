@@ -1,5 +1,6 @@
 use rand::Rng;
 use slint::*;
+use ureq::*;
 
 slint::slint! {
     export component MainWindow inherits Window {
@@ -10,7 +11,16 @@ slint::slint! {
     }
 }
 
+fn get_tile() -> Image {
+    let mut buffer = SharedPixelBuffer::<Rgb8Pixel>::new(256, 256);
+    let body: String = ureq::get("https://tile.openstreetmap.org/13/1294/2788.png")
+        .call().unwrap().into_string().unwrap();
+    println!("{}", body);
+    Image::from_rgb8(buffer)
+}
+
 fn build_map(w: u32, h: u32, aim: u8) -> Image {
+    let tile = get_tile();
     let mut pixel_buffer = SharedPixelBuffer::<Rgb8Pixel>::new(w, h);
 
     for (i, pixel) in pixel_buffer.make_mut_slice().iter_mut().enumerate() {
