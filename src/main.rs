@@ -28,8 +28,8 @@ impl TileStorage {
     fn get_tile(&self, url: &String) -> Option<&Tile> {
         self.tiles.get(url)
     }
-    fn set_tile(&mut self, tile: &Tile) {
-        self.tiles.insert(tile.url.clone(), tile.clone());
+    fn set_tile(&mut self, tile: Tile) {
+        self.tiles.insert(tile.url.clone(), tile);
     }
 }
 
@@ -58,7 +58,7 @@ fn get_tile(storage: &mut TileStorage, zoom: u32, x: u32, y: u32) -> &Tile {
             url: url.clone(),
             data,
         };
-        storage.set_tile(&tile);
+        storage.set_tile(tile);
     }
 
     storage.get_tile(&url).unwrap()
