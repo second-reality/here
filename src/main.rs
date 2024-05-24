@@ -16,12 +16,14 @@ struct Tile {
 }
 
 struct TileStorage {
-    tiles: std::collections::HashMap<String, Tile>
+    tiles: std::collections::HashMap<String, Tile>,
 }
 
 impl TileStorage {
     fn new() -> Self {
-        TileStorage { tiles: HashMap::new() }
+        TileStorage {
+            tiles: HashMap::new(),
+        }
     }
     fn get_tile(&self, url: &String) -> Option<&Tile> {
         self.tiles.get(url)
@@ -31,44 +33,48 @@ impl TileStorage {
     }
 }
 
-fn get_tile(storage: &mut TileStorage, zoom: u32, x: u32, y: u32) -> Tile {
+fn get_tile(storage: &mut TileStorage, zoom: u32, x: u32, y: u32) -> &Tile {
     let url = format!("https://tile.openstreetmap.org/{zoom}/{x}/{y}.png");
-    
+
     let cached = storage.get_tile(&url);
 
-    if cached.is_some() {
-        return cached.unwrap().clone();
+    if cached.is_none() {
+        let mut buf = Vec::new();
+        println!("Download {url}");
+        let _ = ureq::get(url.as_str())
+            .call()
+            .unwrap()
+            .into_reader()
+            .read_to_end(&mut buf);
+        let data: image::RgbImage = image::io::Reader::new(std::io::Cursor::new(buf))
+            .with_guessed_format()
+            .unwrap()
+            .decode()
+            .unwrap()
+            .into_rgb8();
+        assert_eq!(data.width(), 256);
+        assert_eq!(data.height(), 256);
+        let tile = Tile {
+            url: url.clone(),
+            data,
+        };
+        storage.set_tile(&tile);
     }
 
-    let mut buf = Vec::new();
-    let _ = ureq::get(url.as_str())
-        .call()
-        .unwrap()
-        .into_reader()
-        .read_to_end(&mut buf);
-    let data: image::RgbImage = image::io::Reader::new(std::io::Cursor::new(buf))
-        .with_guessed_format()
-        .unwrap()
-        .decode()
-        .unwrap()
-        .into_rgb8();
-    assert_eq!(data.width(), 256);
-    assert_eq!(data.height(), 256);
-    let tile = Tile { url, data };
-    storage.set_tile(&tile);
-    tile
+    storage.get_tile(&url).unwrap()
 }
 
-fn build_map(w: u32, h: u32) -> image::RgbImage {
-    let mut storage = TileStorage::new();
+fn build_map(storage: &mut TileStorage, w: u32, h: u32) -> image::RgbImage {
     let zoom = 13;
-    let x = 1294;
-    let y = 2788;
+    let x_start = 1294;
+    let y_start = 2788;
 
     let mut map: image::RgbImage = image::ImageBuffer::new(w, h);
 
     for (x, y, pixel) in map.enumerate_pixels_mut() {
-        let tile = get_tile(&mut storage, 13, 1294, 2788);
+        let x_coord = x_start + x / 256;
+        let y_coord = y_start + y / 256;
+        let tile = get_tile(storage, zoom, x_coord, y_coord);
         *pixel = *tile.data.get_pixel(x % 256, y % 256);
     }
 
@@ -77,8 +83,9 @@ fn build_map(w: u32, h: u32) -> image::RgbImage {
 
 fn main() {
     let w = MainWindow::new().unwrap();
+    let mut storage = TileStorage::new();
     w.on_build_map(move |width, height| {
-        let img = build_map(width as u32, height as u32);
+        let img = build_map(&mut storage, width as u32, height as u32);
         let buffer = slint::SharedPixelBuffer::<slint::Rgb8Pixel>::clone_from_slice(
             img.as_raw(),
             img.width(),
