@@ -38,25 +38,6 @@ fn build_map(w: u32, h: u32) -> image::RgbImage {
         *pixel = *tile.get_pixel(x % 256, y % 256);
     }
 
-    //      let mut a: RgbImage = ImageBuffer::new(10, 10);
-    //      {
-    //          let b = a.get_mut(3 * 10).unwrap();
-    //          *b = 255;
-    //      }
-    //      assert_eq!(a.get_pixel(0, 1)[0], 255)
-    //  Image::from_rgba8(buffer)
-
-    //let mut pixel_buffer = SharedPixelBuffer::<Rgb8Pixel>::new(256, 256);
-
-    //for (i, pixel) in pixel_buffer.make_mut_slice().iter_mut().enumerate() {
-    //    let x = i % w as usize;
-    //    let val = 10;
-    //    *pixel = Rgb8Pixel {
-    //        r: val,
-    //        g: val,
-    //        b: val,
-    //    };
-    //}
     map
 }
 
