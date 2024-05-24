@@ -12,6 +12,9 @@ slint::slint! {
 #[derive(Debug, Clone)]
 struct Tile {
     url: String,
+    x: u32,
+    y: u32,
+    zoom: u32,
     data: image::RgbImage,
 }
 
@@ -57,6 +60,9 @@ fn get_tile(storage: &mut TileStorage, zoom: u32, x: u32, y: u32) -> &Tile {
         let tile = Tile {
             url: url.clone(),
             data,
+            x,
+            y,
+            zoom,
         };
         storage.set_tile(tile);
     }
@@ -79,10 +85,15 @@ fn build_map(storage: &mut TileStorage, w: u32, h: u32) -> image::RgbImage {
 
     let mut map: image::RgbImage = image::ImageBuffer::new(w, h);
 
+    let mut tile = get_tile(storage, zoom, x_left / 256, y_top / 256);
     for (x, y, pixel) in map.enumerate_pixels_mut() {
         let x = x_left + x;
         let y = y_top + y;
-        let tile = get_tile(storage, zoom, x / 256, y / 256);
+        let x_tile = x / 256;
+        let y_tile = y / 256;
+        if tile.x != x_tile || tile.y != y_tile {
+            tile = get_tile(storage, zoom, x_tile, y_tile);
+        }
         *pixel = *tile.data.get_pixel(x % 256, y % 256);
     }
 
