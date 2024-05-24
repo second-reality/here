@@ -1,7 +1,3 @@
-use image::io::Reader as ImageReader;
-use rand::Rng;
-use slint::*;
-
 slint::slint! {
     export component MainWindow inherits Window {
         Image {
@@ -19,7 +15,7 @@ fn get_tile() -> image::RgbImage {
         .into_reader()
         .read_to_end(&mut buf);
 
-    let tile: image::RgbImage = ImageReader::new(std::io::Cursor::new(buf))
+    let tile: image::RgbImage = image::io::Reader::new(std::io::Cursor::new(buf))
         .with_guessed_format()
         .unwrap()
         .decode()
@@ -45,12 +41,12 @@ fn main() {
     let w = MainWindow::new().unwrap();
     w.on_build_map(move |width, height| {
         let img = build_map(width as u32, height as u32);
-        let buffer = SharedPixelBuffer::<Rgb8Pixel>::clone_from_slice(
+        let buffer = slint::SharedPixelBuffer::<slint::Rgb8Pixel>::clone_from_slice(
             img.as_raw(),
             img.width(),
             img.height(),
         );
-        Image::from_rgb8(buffer)
+        slint::Image::from_rgb8(buffer)
     });
     w.run().unwrap();
 }
