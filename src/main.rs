@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 slint::slint! {
     export component MainWindow inherits Window {
         Image {
@@ -7,31 +9,67 @@ slint::slint! {
     }
 }
 
-fn get_tile() -> image::RgbImage {
+#[derive(Debug, Clone)]
+struct Tile {
+    url: String,
+    data: image::RgbImage,
+}
+
+struct TileStorage {
+    tiles: std::collections::HashMap<String, Tile>
+}
+
+impl TileStorage {
+    fn new() -> Self {
+        TileStorage { tiles: HashMap::new() }
+    }
+    fn get_tile(&self, url: &String) -> Option<&Tile> {
+        self.tiles.get(url)
+    }
+    fn set_tile(&mut self, tile: &Tile) {
+        self.tiles.insert(tile.url.clone(), tile.clone());
+    }
+}
+
+fn get_tile(storage: &mut TileStorage, zoom: u32, x: u32, y: u32) -> Tile {
+    let url = format!("https://tile.openstreetmap.org/{zoom}/{x}/{y}.png");
+    
+    let cached = storage.get_tile(&url);
+
+    if cached.is_some() {
+        return cached.unwrap().clone();
+    }
+
     let mut buf = Vec::new();
-    let _ = ureq::get("https://tile.openstreetmap.org/13/1294/2788.png")
+    let _ = ureq::get(url.as_str())
         .call()
         .unwrap()
         .into_reader()
         .read_to_end(&mut buf);
-
-    let tile: image::RgbImage = image::io::Reader::new(std::io::Cursor::new(buf))
+    let data: image::RgbImage = image::io::Reader::new(std::io::Cursor::new(buf))
         .with_guessed_format()
         .unwrap()
         .decode()
         .unwrap()
         .into_rgb8();
+    assert_eq!(data.width(), 256);
+    assert_eq!(data.height(), 256);
+    let tile = Tile { url, data };
+    storage.set_tile(&tile);
     tile
 }
 
 fn build_map(w: u32, h: u32) -> image::RgbImage {
-    let tile = get_tile();
-    //tile
+    let mut storage = TileStorage::new();
+    let zoom = 13;
+    let x = 1294;
+    let y = 2788;
 
     let mut map: image::RgbImage = image::ImageBuffer::new(w, h);
 
     for (x, y, pixel) in map.enumerate_pixels_mut() {
-        *pixel = *tile.get_pixel(x % 256, y % 256);
+        let tile = get_tile(&mut storage, 13, 1294, 2788);
+        *pixel = *tile.data.get_pixel(x % 256, y % 256);
     }
 
     map
