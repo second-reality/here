@@ -65,21 +65,24 @@ fn get_tile(storage: &mut TileStorage, zoom: u32, x: u32, y: u32) -> &Tile {
 }
 
 fn build_map(storage: &mut TileStorage, w: u32, h: u32) -> image::RgbImage {
-    let zoom = 13;
+    let zoom = 15;
 
     let lat = 48.85321351868104;
     let long = 2.3494646920113937;
     let pixel = googleprojection::from_ll_to_pixel(&(long, lat), zoom as usize).unwrap();
 
-    let x_start = pixel.0 as u32 / 256;
-    let y_start = pixel.1 as u32 / 256;
+    let x_center = pixel.0 as u32;
+    let y_center = pixel.1 as u32;
+
+    let x_left = x_center - w / 2;
+    let y_top = y_center - h / 2;
 
     let mut map: image::RgbImage = image::ImageBuffer::new(w, h);
 
     for (x, y, pixel) in map.enumerate_pixels_mut() {
-        let x_coord = x_start + x / 256;
-        let y_coord = y_start + y / 256;
-        let tile = get_tile(storage, zoom, x_coord, y_coord);
+        let x = x_left + x;
+        let y = y_top + y;
+        let tile = get_tile(storage, zoom, x / 256, y / 256);
         *pixel = *tile.data.get_pixel(x % 256, y % 256);
     }
 
